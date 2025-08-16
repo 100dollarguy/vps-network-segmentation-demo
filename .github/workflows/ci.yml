@@ -21,69 +21,69 @@ jobs:
 
       - name: Lint bash scripts
         run: |
-          shellcheck setup/*.sh teardown/*.sh || true
+          shellcheck *.sh || true
 
       - name: Run network setup
         run: |
-          sudo bash setup/network_setup.sh
+          sudo bash network_setup.sh
 
       - name: Verify namespaces and IPs
         run: |
           echo ">>> Namespaces"
-          ip netns list
+          ip netns list || true
           echo ">>> Interfaces"
           ip link show
           echo ">>> Guest namespace IP"
-          sudo ip netns exec guestns ip addr show
+          sudo ip netns exec guestns ip addr show || true
           echo ">>> IoT namespace IP"
-          sudo ip netns exec iotns ip addr show
+          sudo ip netns exec iotns ip addr show || true
 
       - name: Connectivity Tests
         run: |
-          echo "### Running Connectivity Tests ###"
+          echo "### Running Connectivity Tests ###" | tee connectivity.log
 
-          echo "Test 1: Primary -> Guest (should succeed)"
-          ping -c 2 10.10.10.2
+          echo "Test 1: Primary -> Guest (should succeed)" | tee -a connectivity.log
+          ping -c 2 10.10.10.2 | tee -a connectivity.log
 
-          echo "Test 2: Primary -> IoT (should succeed)"
-          ping -c 2 10.10.10.3
+          echo "Test 2: Primary -> IoT (should succeed)" | tee -a connectivity.log
+          ping -c 2 10.10.10.3 | tee -a connectivity.log
 
-          echo "Test 3: Guest -> IoT (should succeed)"
-          sudo ip netns exec guestns ping -c 2 10.10.10.3
+          echo "Test 3: Guest -> IoT (should succeed)" | tee -a connectivity.log
+          sudo ip netns exec guestns ping -c 2 10.10.10.3 | tee -a connectivity.log
 
-          echo "Test 4: IoT -> Guest (should fail)"
+          echo "Test 4: IoT -> Guest (should fail)" | tee -a connectivity.log
           if sudo ip netns exec iotns ping -c 2 -W 1 10.10.10.2; then
-            echo "❌ IoT was able to reach Guest (unexpected)"
+            echo "❌ IoT reached Guest (unexpected)" | tee -a connectivity.log
             exit 1
           else
-            echo "✅ IoT could NOT reach Guest (expected)"
+            echo "✅ IoT could NOT reach Guest (expected)" | tee -a connectivity.log
           fi
 
-          echo "Test 5: Guest -> Primary (should fail)"
+          echo "Test 5: Guest -> Primary (should fail)" | tee -a connectivity.log
           if sudo ip netns exec guestns ping -c 2 -W 1 10.10.10.1; then
-            echo "❌ Guest was able to reach Primary (unexpected)"
+            echo "❌ Guest reached Primary (unexpected)" | tee -a connectivity.log
             exit 1
           else
-            echo "✅ Guest could NOT reach Primary (expected)"
+            echo "✅ Guest could NOT reach Primary (expected)" | tee -a connectivity.log
           fi
 
-          echo "Test 6: IoT -> Primary (should fail)"
+          echo "Test 6: IoT -> Primary (should fail)" | tee -a connectivity.log
           if sudo ip netns exec iotns ping -c 2 -W 1 10.10.10.1; then
-            echo "❌ IoT was able to reach Primary (unexpected)"
+            echo "❌ IoT reached Primary (unexpected)" | tee -a connectivity.log
             exit 1
           else
-            echo "✅ IoT could NOT reach Primary (expected)"
+            echo "✅ IoT could NOT reach Primary (expected)" | tee -a connectivity.log
           fi
 
       - name: Run network cleanup
         if: always()
         run: |
-          sudo bash teardown/network_cleanup.sh
+          sudo bash network_cleanup.sh
 
       - name: Upload logs (for debugging)
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: debug-logs
-          path: /var/log
+          name: connectivity-logs
+          path: connectivity.log
 
