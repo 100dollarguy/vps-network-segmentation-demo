@@ -87,54 +87,58 @@ I wanted to practice real-world network security and segmentation in a low-cost 
 
 Clone the repo and run the setup script:
 
-bash
-./setup/network_setup.sh
+```bash
+git clone https://github.com/100dollarguy/vps-network-segmentation-demo.git
+```
 
+```bash
+./setup/network_setup.sh
+```
 For cleanup, use:
 
-bash
+```bash
 ./teardown/network_cleanup.sh
-
+```
 Or, to test manually, use these commands one by one:
 
 1. Test: Primary (host) to Guest (direct veth)
 
-bash
+```bash
 ping -c 3 10.10.2.2      # Should SUCCEED
-
+```
 2. Test: Primary (host) to IoT (direct veth)
 
-bash
+```bash
 ping -c 3 10.10.3.2      # Should SUCCEED
-
+```
 3. Test: Guest to IoT (over the bridge)
 
-bash
+```bash
 sudo ip netns exec guestns ping -c 3 10.10.10.3    # Should 
 SUCCEED
-
+```
 4. Test: IoT to Guest (over the bridge)
 
-bash
+```bash
 sudo ip netns exec iotns ping -c 3 10.10.10.2      # Should FAIL (blocked by firewall)
-
+```
 5. Test: Guest to Primary
 (Should NOT be allowed if segmentation enforced)
 
-bash
+```bash
 sudo ip netns exec guestns ping -c 3 10.10.1.2     # Should FAIL (network unreachable or timeout)
-
+```
 6. Test: IoT to Primary
 (Should NOT be allowed if segmentation enforced)
 
-bash
+```bash
 sudo ip netns exec iotns ping -c 3 10.10.1.2       # Should FAIL (network unreachable or timeout)
-
+```
 7. Show firewall rules in guest namespace (for troubleshooting)
 
-bash
+```bash
 sudo ip netns exec guestns iptables -L INPUT -v -n
-
+```
 
 ## ✨ License
 
