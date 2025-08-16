@@ -90,6 +90,7 @@ Clone the repo and run the setup script:
 ```bash
 git clone https://github.com/100dollarguy/vps-network-segmentation-demo.git
 ```
+For setup, use:
 
 ```bash
 ./setup/network_setup.sh
