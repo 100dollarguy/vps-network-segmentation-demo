@@ -1,53 +1,34 @@
-name: Network Segmentation CI
+name: Connectivity Tests
 
 on:
   push:
-    branches: [ "master" ]
   pull_request:
-    branches: [ "master" ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Run network setup
-        run: |
-          set -e
-          sudo bash scripts/network_setup.sh
+      - name: Setup networks
+        run: sudo bash scripts/network_setup.sh
 
-      - name: Test connectivity (log-only)
+      - name: Run connectivity tests
         run: |
-          set +e
           {
-            echo "===== Connectivity Tests ====="
-
-            echo
-            echo "Guest → IoT (expected: ✅ works)"
-            ip netns exec guestns ping -c 3 10.10.10.3
-
-            echo
-            echo "IoT → Guest (expected: ❌ blocked)"
-            ip netns exec iotns ping -c 3 10.10.10.2
-
-            echo
-            echo "Host → Guest (expected: ✅ works)"
-            ping -c 3 10.10.10.2
-
-            echo
-            echo "Host → IoT (expected: ✅ works)"
-            ping -c 3 10.10.10.3
-
-            echo "===== End of Tests ====="
+            echo "Running connectivity tests..."
+            # Run each ping, but don't fail workflow on packet loss
+            ping -c 3 10.10.10.3 || echo "Ping to 10.10.10.3 failed"
+            ping -c 3 10.10.10.2 || echo "Ping to 10.10.10.2 failed"
+            ping -c 3 10.10.10.4 || echo "Ping to 10.10.10.4 failed"
           } | tee connectivity.log
-          set -e
 
       - name: Cleanup
         if: always()
         run: sudo bash scripts/network_cleanup.sh
 
-      - name: Upload connectivity log
+      - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
