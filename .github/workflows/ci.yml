@@ -7,29 +7,50 @@ on:
     branches: [ "master" ]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up network
-        run: sudo bash scripts/network_setup.sh
+      - name: Run network setup
+        run: |
+          set -e
+          sudo bash scripts/network_setup.sh
 
-      - name: Run connectivity tests
+      - name: Test connectivity (log-only)
         run: |
           set +e
-          bash scripts/connectivity_tests.sh | tee connectivity.log
+          {
+            echo "===== Connectivity Tests ====="
+
+            echo
+            echo "Guest → IoT (expected: ✅ works)"
+            ip netns exec guestns ping -c 3 10.10.10.3
+
+            echo
+            echo "IoT → Guest (expected: ❌ blocked)"
+            ip netns exec iotns ping -c 3 10.10.10.2
+
+            echo
+            echo "Host → Guest (expected: ✅ works)"
+            ping -c 3 10.10.10.2
+
+            echo
+            echo "Host → IoT (expected: ✅ works)"
+            ping -c 3 10.10.10.3
+
+            echo "===== End of Tests ====="
+          } | tee connectivity.log
           set -e
 
       - name: Cleanup
         if: always()
         run: sudo bash scripts/network_cleanup.sh
 
-      - name: Upload connectivity logs
+      - name: Upload connectivity log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: connectivity-logs
+          name: connectivity-results
           path: connectivity.log
 
