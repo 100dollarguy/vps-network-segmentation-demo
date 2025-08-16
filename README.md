@@ -28,7 +28,45 @@ I wanted to practice real-world network security and segmentation in a low-cost 
 - **UFW and iptables**: To make firewall rules and control who can talk to whom.
 - **Ping, netcat, arping**: To test if traffic is really allowed or blocked.
 - **Bash scripts**: To automate setup and cleanup.
-- *(Optionally) Drawing tools*: For network diagrams.
+- 
+![Network-setup](/scripts/network_setup.sh)
+
+![Network-cleanup](/scripts/network_cleanup.sh)
+
+## Key Setup Commands (How it Works Under the Hood)
+
+```bash
+# 1. Create network namespaces
+ip netns add guestns
+ip netns add iotns
+
+# 2. Create veth pairs
+ip link add veth-guest type veth peer name veth-guest-br
+ip link add veth-iot type veth peer name veth-iot-br
+
+# 3. Create and bring up a bridge
+ip link add name br-vlan type bridge
+ip link set br-vlan up
+
+# 4. Attach veths to the bridge and namespaces
+ip link set veth-guest-br master br-vlan
+ip link set veth-guest-br up
+ip link set veth-guest netns guestns
+ip netns exec guestns ip link set veth-guest up
+
+ip link set veth-iot-br master br-vlan
+ip link set veth-iot-br up
+ip link set veth-iot netns iotns
+ip netns exec iotns ip link set veth-iot up
+
+# 5. Set IP addresses
+ip netns exec guestns ip addr add 10.10.10.2/24 dev veth-guest
+ip netns exec iotns ip addr add 10.10.10.3/24 dev veth-iot
+
+# 6. Set up iptables (one-way trust in guestns)
+ip netns exec guestns iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+ip netns exec guestns iptables -A INPUT -s 10.10.10.3 -j DROP
+```
 
 ## 5. Problems I Faced
 - At first, **all my “devices” could still talk freely**—the firewall wasn’t working as I expected on a single server.
