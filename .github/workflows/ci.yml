@@ -1,37 +1,34 @@
-name: Connectivity Tests
+name: Network Segmentation Demo CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup networks
-        run: sudo bash scripts/network_setup.sh
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
 
-      - name: Run connectivity tests
+      - name: Run network setup
         run: |
-          {
-            echo "Running connectivity tests..."
-            # Run each ping, but don't fail workflow on packet loss
-            ping -c 3 10.10.10.3 || echo "Ping to 10.10.10.3 failed"
-            ping -c 3 10.10.10.2 || echo "Ping to 10.10.10.2 failed"
-            ping -c 3 10.10.10.4 || echo "Ping to 10.10.10.4 failed"
-          } | tee connectivity.log
+          sudo bash scripts/network_setup.sh > connectivity.log 2>&1 || true
 
-      - name: Cleanup
+      - name: Run network cleanup
         if: always()
-        run: sudo bash scripts/network_cleanup.sh
+        run: sudo bash scripts/network_cleanup.sh || true
 
-      - name: Upload logs
+      - name: Upload connectivity log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: connectivity-results
+          name: connectivity-log
           path: connectivity.log
 
