@@ -21,11 +21,11 @@ jobs:
 
       - name: Lint bash scripts
         run: |
-          shellcheck *.sh || true
+          shellcheck scripts/*.sh || true
 
       - name: Run network setup
         run: |
-          sudo bash network_setup.sh
+          sudo bash scripts/network_setup.sh
 
       - name: Verify namespaces and IPs
         run: |
@@ -78,7 +78,7 @@ jobs:
       - name: Run network cleanup
         if: always()
         run: |
-          sudo bash network_cleanup.sh
+          sudo bash scripts/network_cleanup.sh
 
       - name: Upload logs (for debugging)
         if: failure()
