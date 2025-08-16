@@ -1,5 +1,7 @@
 # Simple Segmented Networks on a Single Server
 
+[![Network Segmentation CI](https://github.com/100dollarguy/vps-network-segmentation-demo/actions/workflows/ci.yml/badge.svg)](https://github.com/100dollarguy/vps-network-segmentation-demo/actions/workflows/ci.yml)
+
 ## 1. What Is This Project About?
 This project shows how you can create a mini, segmented network—like you’d find in a company—using just one Linux server. It uses “network namespaces,” so you can simulate different devices or subnets (like a main PC, a guest device, and an IoT gadget) without buying more hardware or cloud servers.
 
