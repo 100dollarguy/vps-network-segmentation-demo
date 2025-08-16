@@ -1,0 +1,36 @@
+# Ignore system files and editor configs
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Ignore log and runtime files
+*.log
+
+# Ignore setup outputs
+*.out
+
+# Ignore screenshots and docs if you put any sensitive/personal files in them
+screenshots/*.tmp
+docs/*.tmp
+
+# Ignore bash history
+.bash_history
+
+# Ignore compiled python files (if any scripts use python)
+__pycache__/
+*.pyc
+
+# Ignore backup files
+*.bak
+
+# Ignore env files (if used for config/secrets)
+.env
+.env.*
+
+# Ignore network state dumps and pcap files
+*.pcap
+*.cap
+*.dump
+
